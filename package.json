@@ -1,0 +1,31 @@
+{
+  "name": "lftc-2025",
+  "version": "1.0.0",
+  "description": "JFLAP Web - Simulador de Linguagens Formais",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Build completed - static files ready'",
+    "start": "firebase serve",
+    "deploy": "firebase deploy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rosseto-rafael/lftc-2025.git"
+  },
+  "authors": [
+    "Bruno Augusto Furquim",
+    "Luiz Henrique Cruz dos Santos",
+    "Rafael Bassi Rosseto"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "jflap",
+    "linguagens-formais",
+    "automatos",
+    "regex",
+    "gramaticas",
+    "teoria-computacao"
+  ],
+  "devDependencies": {},
+  "dependencies": {}
+}
