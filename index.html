@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trabalho LFTC</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.6/dist/vis-network.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/vis-network@9.1.6/dist/vis-network.min.css" rel="stylesheet">
+
     <style>
         .hidden { display: none !important; }
         .vis-network { border: 1px solid #ddd; border-radius: 8px; }
@@ -40,12 +39,7 @@
                     <button id="nav-regex" onclick="showPage('regex')" class="nav-btn px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors">
                         Regex
                     </button>
-                    <button id="nav-automaton" onclick="showPage('automaton')" class="nav-btn px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors">
-                        Autômatos
-                    </button>
-                    <button id="nav-grammar" onclick="showPage('grammar')" class="nav-btn px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors">
-                        Gramáticas
-                    </button>
+
                 </div>
             </div>
         </div>
@@ -64,7 +58,7 @@
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-6">
+            <div class="grid md:grid-cols-1 gap-6 max-w-md mx-auto">
                 <!-- Regex Card -->
                 <div id="card-regex" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
                      onclick="showPage('regex')">
@@ -84,43 +78,7 @@
                     </div>
                 </div>
 
-                <!-- Automaton Card -->
-                <div id="card-automaton" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
-                     onclick="showPage('automaton')">
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="text-2xl">🔄</span>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">
-                            Autômatos Finitos
-                        </h3>
-                        <p class="text-gray-600 mb-4">
-                            Crie e simule autômatos finitos determinísticos e não-determinísticos com visualização gráfica.
-                        </p>
-                        <button class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
-                            Acessar
-                        </button>
-                    </div>
-                </div>
 
-                <!-- Grammar Card -->
-                <div id="card-grammar" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
-                     onclick="showPage('grammar')">
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="text-2xl">📚</span>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">
-                            Gramáticas Regulares
-                        </h3>
-                        <p class="text-gray-600 mb-4">
-                            Defina gramáticas regulares e teste se cadeias podem ser derivadas passo a passo.
-                        </p>
-                        <button class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors">
-                            Acessar
-                        </button>
-                    </div>
-                </div>
             </div>
 
             <!-- Créditos -->
@@ -252,252 +210,7 @@
         </div>
     </div>
 
-    <!-- Automaton Page -->
-    <div id="automaton-page" class="page hidden">
-        <div class="max-w-6xl mx-auto px-4 py-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">
-                Simulador de Autômatos Finitos
-            </h2>
 
-            <div class="grid lg:grid-cols-2 gap-6">
-                <!-- Definition Panel -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Definição do Autômato</h3>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Estados (separados por vírgula)</label>
-                            <input type="text" id="states-input" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                   placeholder="q0,q1,q2">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Alfabeto (separado por vírgula)</label>
-                            <input type="text" id="alphabet-input" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                   placeholder="a,b">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado Inicial</label>
-                            <input type="text" id="initial-state" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                   placeholder="q0">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Estados de Aceitação (separados por vírgula)</label>
-                            <input type="text" id="accepting-states" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                   placeholder="q1,q2">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Transições (formato: estado,símbolo,próximo_estado)
-                            </label>
-                            <textarea id="transitions-input" rows="4"
-                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                      placeholder="q0,a,q1&#10;q1,b,q2&#10;q2,a,q0"></textarea>
-                        </div>
-                        
-                        <button onclick="createAutomaton()" 
-                                class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
-                            Criar Autômato
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Visualization Panel -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Visualização</h3>
-                    <div id="automaton-network" style="height: 300px;" class="border rounded-md"></div>
-                    
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cadeia de Teste</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="test-string-automaton" 
-                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                   placeholder="aba">
-                            <button onclick="simulateAutomaton()" 
-                                    class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
-                                Simular
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="automaton-simulation" class="mt-6 bg-white rounded-lg shadow-md p-6 hidden">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Simulação</h3>
-                <div id="simulation-steps"></div>
-                <div id="simulation-result" class="mt-4"></div>
-            </div>
-
-            <!-- Exemplos de Autômatos -->
-            <div class="mt-6 bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Exemplos de Autômatos</h3>
-                <p class="text-sm text-gray-600 mb-4">Clique em um exemplo para preenchimento automático:</p>
-                
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <button onclick="fillAutomatonExample('binary-even')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-green-50 hover:border-green-300 transition-colors">
-                        <div class="font-medium text-green-700 mb-1">🔢 Números Binários Pares</div>
-                        <p class="text-xs text-gray-600">Aceita números binários pares (terminam em 0)</p>
-                    </button>
-                    
-                    <button onclick="fillAutomatonExample('contains-ab')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-blue-50 hover:border-blue-300 transition-colors">
-                        <div class="font-medium text-blue-700 mb-1">🔍 Contém "ab"</div>
-                        <p class="text-xs text-gray-600">Aceita cadeias que contêm a subcadeia "ab"</p>
-                    </button>
-                    
-                    <button onclick="fillAutomatonExample('starts-ends-same')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-purple-50 hover:border-purple-300 transition-colors">
-                        <div class="font-medium text-purple-700 mb-1">🔄 Início = Fim</div>
-                        <p class="text-xs text-gray-600">Aceita cadeias que começam e terminam com o mesmo símbolo</p>
-                    </button>
-                    
-                    <button onclick="fillAutomatonExample('odd-length')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-yellow-50 hover:border-yellow-300 transition-colors">
-                        <div class="font-medium text-yellow-700 mb-1">📏 Comprimento Ímpar</div>
-                        <p class="text-xs text-gray-600">Aceita cadeias de comprimento ímpar</p>
-                    </button>
-                    
-                    <button onclick="fillAutomatonExample('ends-with-ba')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-indigo-50 hover:border-indigo-300 transition-colors">
-                        <div class="font-medium text-indigo-700 mb-1">🎯 Termina com "ba"</div>
-                        <p class="text-xs text-gray-600">Aceita cadeias que terminam com "ba"</p>
-                    </button>
-                    
-                    <button onclick="fillAutomatonExample('basic')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                        <div class="font-medium text-gray-700 mb-1">⭐ Exemplo Básico</div>
-                        <p class="text-xs text-gray-600">Autômato simples para aprendizado</p>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Grammar Page -->
-    <div id="grammar-page" class="page hidden">
-        <div class="max-w-4xl mx-auto px-4 py-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">
-                Simulador de Gramáticas Regulares
-            </h2>
-
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Definição da Gramática</h3>
-                
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Variáveis (não-terminais)</label>
-                            <input type="text" id="variables-input" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                   placeholder="S,A,B">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Terminais</label>
-                            <input type="text" id="terminals-input" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                   placeholder="a,b">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Símbolo Inicial</label>
-                            <input type="text" id="start-symbol" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                   placeholder="S">
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Produções (uma por linha, formato: A → aB | ε)
-                        </label>
-                        <textarea id="productions-input" rows="6"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                  placeholder="S → aA | bB | ε&#10;A → aA | a&#10;B → bB | b"></textarea>
-                        <p class="text-xs text-gray-500 mt-1">
-                            Use ε para string vazia, | para alternativas
-                        </p>
-                    </div>
-                </div>
-                
-                <button onclick="createGrammar()" 
-                        class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition-colors">
-                    Criar Gramática
-                </button>
-            </div>
-
-            <div id="grammar-test" class="bg-white rounded-lg shadow-md p-6 hidden">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Teste de Derivação</h3>
-                <div class="flex gap-2 mb-4">
-                    <input type="text" id="test-string-grammar" 
-                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                           placeholder="aba">
-                    <button onclick="testGrammar()" 
-                            class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors">
-                        Testar Derivação
-                    </button>
-                </div>
-                
-                <div id="grammar-derivation" class="hidden">
-                    <h4 class="font-semibold text-gray-700 mb-2">Passos da Derivação:</h4>
-                    <div id="derivation-steps"></div>
-                    <div id="derivation-result" class="mt-4"></div>
-                </div>
-            </div>
-
-            <!-- Exemplos de Gramáticas -->
-            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Exemplos de Gramáticas</h3>
-                <p class="text-sm text-gray-600 mb-4">Clique em um exemplo para preenchimento automático:</p>
-                
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <button onclick="fillGrammarExample('alternating')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-purple-50 hover:border-purple-300 transition-colors">
-                        <div class="font-medium text-purple-700 mb-1">🔄 Alternando a,b</div>
-                        <p class="text-xs text-gray-600">Gera cadeias alternando 'a' e 'b'</p>
-                    </button>
-                    
-                    <button onclick="fillGrammarExample('even-as')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-blue-50 hover:border-blue-300 transition-colors">
-                        <div class="font-medium text-blue-700 mb-1">🔢 Número Par de 'a'</div>
-                        <p class="text-xs text-gray-600">Aceita cadeias com número par de 'a'</p>
-                    </button>
-                    
-                    <button onclick="fillGrammarExample('starts-a-ends-b')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-green-50 hover:border-green-300 transition-colors">
-                        <div class="font-medium text-green-700 mb-1">🎯 Começa 'a', Termina 'b'</div>
-                        <p class="text-xs text-gray-600">Cadeias que começam com 'a' e terminam com 'b'</p>
-                    </button>
-                    
-                    <button onclick="fillGrammarExample('palindromes')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-yellow-50 hover:border-yellow-300 transition-colors">
-                        <div class="font-medium text-yellow-700 mb-1">🪞 Palíndromos Simples</div>
-                        <p class="text-xs text-gray-600">Gera palíndromos sobre {a,b}</p>
-                    </button>
-                    
-                    <button onclick="fillGrammarExample('binary-numbers')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-indigo-50 hover:border-indigo-300 transition-colors">
-                        <div class="font-medium text-indigo-700 mb-1">💻 Números Binários</div>
-                        <p class="text-xs text-gray-600">Gera números binários válidos</p>
-                    </button>
-                    
-                    <button onclick="fillGrammarExample('basic')" 
-                            class="text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 hover:border-gray-300 transition-colors">
-                        <div class="font-medium text-gray-700 mb-1">⭐ Exemplo Básico</div>
-                        <p class="text-xs text-gray-600">Gramática simples para aprendizado</p>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="script.js"></script>
 </body>
