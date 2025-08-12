@@ -23,9 +23,9 @@ let network = null;
 // grammar: false,     // Disables Grammar page completely
 //
 let pageAccess = {
-    regex: true,        // Expressões Regulares
-    automaton: false,    // Autômatos Finitos  
-    grammar: false       // Gramáticas Regulares
+    regex: true,        // Expressões Regulares - SEGUNDA ENTREGA
+    automaton: true,    // Autômatos Finitos - SEGUNDA ENTREGA  
+    grammar: false      // Gramáticas Regulares - Desabilitado na segunda entrega
 };
 
 // EXAMPLE: To disable specific pages, uncomment the lines below:
