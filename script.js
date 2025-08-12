@@ -1,61 +1,16 @@
-// Global variables
+// Global variables (Regex + Automatos na SEGUNDA ENTREGA)
 let currentAutomaton = null;
-let currentGrammar = null;
 let network = null;
 
-// ===================================================================
-// PAGE ACCESS CONTROL - Configure here which pages are accessible
-// ===================================================================
-// 
-// INSTRUCTIONS:
-// - Set to 'true' to ENABLE access to a page
-// - Set to 'false' to DISABLE access to a page
-// 
-// When disabled:
-// - Navigation button becomes grayed out and unclickable
-// - Card on home page becomes grayed out and unclickable  
-// - Direct access attempts show an alert message
-// - Users are redirected to home if currently on disabled page
-//
-// EXAMPLES:
-// regex: false,       // Disables Regex page completely
-// automaton: true,    // Enables Automaton page (default)
-// grammar: false,     // Disables Grammar page completely
-//
-let pageAccess = {
-    regex: true,        // Expressões Regulares - SEGUNDA ENTREGA
-    automaton: true,    // Autômatos Finitos - SEGUNDA ENTREGA  
-    grammar: false      // Gramáticas Regulares - Desabilitado na segunda entrega
-};
-
-// EXAMPLE: To disable specific pages, uncomment the lines below:
-// pageAccess.regex = false;      // Disables Regex page
-// pageAccess.automaton = false;  // Disables Automaton page  
-// pageAccess.grammar = false;    // Disables Grammar page
-
-// Apply page access settings (called on initialization)
-function applyPageAccessSettings() {
-    Object.keys(pageAccess).forEach(pageId => {
-        const navButton = document.getElementById(`nav-${pageId}`);
-        const card = document.getElementById(`card-${pageId}`);
-        
-        if (!pageAccess[pageId]) {
-            // Disable access
-            if (navButton) navButton.classList.add('nav-disabled');
-            if (card) card.classList.add('disabled');
-        } else {
-            // Enable access (default state)
-            if (navButton) navButton.classList.remove('nav-disabled');
-            if (card) card.classList.remove('disabled');
-        }
-    });
-}
+// =================================
+// PAGE ROUTING - SEGUNDA ENTREGA (Regex + Automatos)
+// =================================
 
 // Page routing
 function showPage(pageId, event = null) {
-    // Check if page access is enabled (except for home)
-    if (pageId !== 'home' && !pageAccess[pageId]) {
-        alert(`Acesso à página "${getPageDisplayName(pageId)}" está desabilitado. Habilite nas configurações da página inicial.`);
+    // Na segunda entrega, apenas home, regex e automaton são permitidas
+    if (pageId !== 'home' && pageId !== 'regex' && pageId !== 'automaton') {
+        alert(`Funcionalidade "${getPageDisplayName(pageId)}" não implementada nesta versão.`);
         return;
     }
     
@@ -80,8 +35,7 @@ function showPage(pageId, event = null) {
         const pageMap = {
             'início': 'home',
             'regex': 'regex',
-            'autômatos': 'automaton',
-            'gramáticas': 'grammar'
+            'autômatos': 'automaton'
         };
         
         if (pageMap[btnText] === pageId) {
@@ -101,7 +55,7 @@ function getPageDisplayName(pageId) {
 }
 
 // =================================
-// REGEX VALIDATOR
+// REGEX VALIDATOR - SEGUNDA ENTREGA
 // =================================
 
 function fillRegexExample(type) {
@@ -258,7 +212,7 @@ function displayRegexResults(results, regex) {
 }
 
 // =================================
-// FINITE AUTOMATON SIMULATOR
+// FINITE AUTOMATON SIMULATOR - SEGUNDA ENTREGA
 // =================================
 
 function fillAutomatonExample(type) {
@@ -580,241 +534,20 @@ function displayAutomatonSimulation(result) {
 }
 
 // =================================
-// REGULAR GRAMMAR SIMULATOR
+// INITIALIZATION - SEGUNDA ENTREGA
 // =================================
-
-function fillGrammarExample(type) {
-    const examples = {
-        'alternating': {
-            variables: 'S,A',
-            terminals: 'a,b',
-            startSymbol: 'S',
-            productions: 'S → aA | a\nA → bS | b',
-            testString: 'ab',
-            description: 'Gera cadeias alternando a e b'
-        },
-        'even-as': {
-            variables: 'S,A',
-            terminals: 'a,b',
-            startSymbol: 'S',
-            productions: 'S → bS | aA | ε\nA → bA | aS',
-            testString: 'aabb',
-            description: 'Aceita cadeias com número par de a'
-        },
-        'starts-a-ends-b': {
-            variables: 'S,A',
-            terminals: 'a,b',
-            startSymbol: 'S',
-            productions: 'S → aA\nA → aA | bA | b',
-            testString: 'aabb',
-            description: 'Cadeias que começam com a e terminam com b'
-        },
-        'palindromes': {
-            variables: 'S',
-            terminals: 'a,b',
-            startSymbol: 'S',
-            productions: 'S → aSa | bSb | a | b | ε',
-            testString: 'aba',
-            description: 'Gera palíndromos simples'
-        },
-        'binary-numbers': {
-            variables: 'S,A',
-            terminals: '0,1',
-            startSymbol: 'S',
-            productions: 'S → 1A | 1\nA → 0A | 1A | 0 | 1',
-            testString: '101',
-            description: 'Gera números binários válidos (não começam com 0)'
-        },
-        'basic': {
-            variables: 'S,A',
-            terminals: 'a,b',
-            startSymbol: 'S',
-            productions: 'S → aA | a\nA → bS | b',
-            testString: 'ab',
-            description: 'Gramática básica para aprendizado'
-        }
-    };
-    
-    const example = examples[type];
-    if (example) {
-        // Preenche os campos da gramática
-        document.getElementById('variables-input').value = example.variables;
-        document.getElementById('terminals-input').value = example.terminals;
-        document.getElementById('start-symbol').value = example.startSymbol;
-        document.getElementById('productions-input').value = example.productions;
-        document.getElementById('test-string-grammar').value = example.testString;
-        
-        // Limpa resultados anteriores
-        currentGrammar = null;
-        document.getElementById('grammar-test').classList.add('hidden');
-        document.getElementById('grammar-derivation').classList.add('hidden');
-        
-        // Scroll suave para o formulário
-        document.getElementById('variables-input').scrollIntoView({ behavior: 'smooth' });
-        
-        // Foca no primeiro campo
-        setTimeout(() => {
-            document.getElementById('variables-input').focus();
-        }, 300);
-    }
-}
-
-class RegularGrammar {
-    constructor(variables, terminals, startSymbol, productions) {
-        this.variables = new Set(variables);
-        this.terminals = new Set(terminals);
-        this.startSymbol = startSymbol;
-        this.productions = new Map();
-        
-        // Parse productions
-        productions.forEach(prod => {
-            const [left, right] = prod.split('→').map(s => s.trim());
-            if (!this.productions.has(left)) {
-                this.productions.set(left, []);
-            }
-            
-            const alternatives = right.split('|').map(s => s.trim());
-            alternatives.forEach(alt => {
-                this.productions.get(left).push(alt === 'ε' ? '' : alt);
-            });
-        });
-    }
-    
-    derive(targetString) {
-        const derivations = [];
-        const queue = [{ current: this.startSymbol, steps: [this.startSymbol] }];
-        const visited = new Set();
-        const maxSteps = 20; // Prevent infinite loops
-        
-        while (queue.length > 0 && derivations.length < maxSteps) {
-            const { current, steps } = queue.shift();
-            
-            if (visited.has(current) || steps.length > maxSteps) continue;
-            visited.add(current);
-            
-            if (current === targetString) {
-                return { success: true, steps };
-            }
-            
-            // Find leftmost non-terminal
-            let nonTerminalIndex = -1;
-            for (let i = 0; i < current.length; i++) {
-                if (this.variables.has(current[i])) {
-                    nonTerminalIndex = i;
-                    break;
-                }
-            }
-            
-            if (nonTerminalIndex === -1) {
-                // No more variables to expand
-                if (current === targetString) {
-                    return { success: true, steps };
-                }
-                continue;
-            }
-            
-            const variable = current[nonTerminalIndex];
-            const productions = this.productions.get(variable) || [];
-            
-            productions.forEach(production => {
-                const newString = current.substring(0, nonTerminalIndex) + 
-                                production + 
-                                current.substring(nonTerminalIndex + 1);
-                
-                const newSteps = [...steps, newString];
-                queue.push({ current: newString, steps: newSteps });
-            });
-        }
-        
-        return { success: false, steps: [] };
-    }
-}
-
-function createGrammar() {
-    const variablesInput = document.getElementById('variables-input').value.trim();
-    const terminalsInput = document.getElementById('terminals-input').value.trim();
-    const startSymbol = document.getElementById('start-symbol').value.trim();
-    const productionsInput = document.getElementById('productions-input').value.trim();
-    
-    if (!variablesInput || !terminalsInput || !startSymbol || !productionsInput) {
-        alert('Por favor, preencha todos os campos');
-        return;
-    }
-    
-    try {
-        const variables = variablesInput.split(',').map(s => s.trim());
-        const terminals = terminalsInput.split(',').map(s => s.trim());
-        const productions = productionsInput.split('\n').filter(line => line.trim());
-        
-        currentGrammar = new RegularGrammar(variables, terminals, startSymbol, productions);
-        
-        document.getElementById('grammar-test').classList.remove('hidden');
-        alert('Gramática criada com sucesso!');
-    } catch (error) {
-        alert('Erro ao criar gramática: ' + error.message);
-    }
-}
-
-function testGrammar() {
-    if (!currentGrammar) {
-        alert('Por favor, crie uma gramática primeiro');
-        return;
-    }
-    
-    const testString = document.getElementById('test-string-grammar').value.trim();
-    const result = currentGrammar.derive(testString);
-    
-    displayGrammarDerivation(result, testString);
-}
-
-function displayGrammarDerivation(result, targetString) {
-    const derivationDiv = document.getElementById('grammar-derivation');
-    const stepsDiv = document.getElementById('derivation-steps');
-    const resultDiv = document.getElementById('derivation-result');
-    
-    if (result.success) {
-        let stepsHtml = '<div class="space-y-2">';
-        result.steps.forEach((step, index) => {
-            const isLast = index === result.steps.length - 1;
-            const stepClass = isLast ? 'step-highlight' : '';
-            
-            stepsHtml += `
-                <div class="p-2 border rounded ${stepClass}">
-                    <code class="font-mono">${step || 'ε'}</code>
-                    ${index < result.steps.length - 1 ? ' ⇒' : ''}
-                </div>
-            `;
-        });
-        stepsHtml += '</div>';
-        
-        stepsDiv.innerHTML = stepsHtml;
-        resultDiv.innerHTML = `
-            <div class="p-4 rounded-md result-accepted text-center">
-                <h4 class="text-lg font-semibold">✓ Cadeia pode ser derivada!</h4>
-            </div>
-        `;
-    } else {
-        stepsDiv.innerHTML = '<p class="text-gray-600">Não foi possível encontrar uma derivação.</p>';
-        resultDiv.innerHTML = `
-            <div class="p-4 rounded-md result-rejected text-center">
-                <h4 class="text-lg font-semibold">✗ Cadeia não pode ser derivada</h4>
-            </div>
-        `;
-    }
-    
-    derivationDiv.classList.remove('hidden');
-}
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    // Apply page access settings first
-    applyPageAccessSettings();
-    
     // Show home page
     showPage('home');
     
-    // Add example data for quick testing (automaton and grammar only)
+    // Add example data for quick testing
     setTimeout(() => {
+        // Regex example
+        document.getElementById('regex-input').value = 'a*b+';
+        document.getElementById('test-strings').value = 'b\nbb\nab\naab\naaabb\na\nba\naba\n';
+        
         // Automaton example
         document.getElementById('states-input').value = 'q0,q1,q2';
         document.getElementById('alphabet-input').value = 'a,b';
@@ -822,19 +555,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('accepting-states').value = 'q2';
         document.getElementById('transitions-input').value = 'q0,a,q1\nq1,b,q2\nq2,a,q0\nq2,b,q1';
         document.getElementById('test-string-automaton').value = 'ab';
-        
-        // Grammar example
-        document.getElementById('variables-input').value = 'S,A';
-        document.getElementById('terminals-input').value = 'a,b';
-        document.getElementById('start-symbol').value = 'S';
-        document.getElementById('productions-input').value = 'S → aA | a\nA → bS | b';
-        document.getElementById('test-string-grammar').value = 'ab';
     }, 100);
 });
 
 // Handle navigation clicks on title
 document.addEventListener('click', function(event) {
-    if (event.target.textContent === 'JFLAP Web') {
+    if (event.target.textContent === 'Trabalho LFTC') {
         showPage('home');
     }
 });
