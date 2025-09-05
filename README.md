@@ -1,6 +1,6 @@
-# JFLAP Web - Simulador de Linguagens Formais
+# TRABALHO LFTC
 
-Uma aplicação web minimalista para estudar e experimentar com expressões regulares, autômatos finitos e gramáticas regulares, inspirada no software JFLAP.
+Uma aplicação web minimalista para estudar e experimentar com expressões regulares, autômatos finitos e gramáticas regulares.
 
 ## 🚀 Como usar
 
@@ -19,13 +19,13 @@ Uma aplicação web minimalista para estudar e experimentar com expressões regu
 - Teste múltiplas cadeias de entrada
 - Visualize quais cadeias são aceitas ou rejeitadas
 
-### 🔹 Simulador de Autômatos Finitos
+### 🔹 Simulador de Autômatos Finitos (não desenvolvido)
 - Defina estados, alfabeto, estado inicial e estados de aceitação
 - Especifique transições no formato: `estado,símbolo,próximo_estado`
 - Visualize o autômato graficamente
 - Simule a execução passo a passo com qualquer cadeia de entrada
 
-### 🔹 Simulador de Gramáticas Regulares
+### 🔹 Simulador de Gramáticas Regulares (não desenvolvido)
 - Defina variáveis (não-terminais) e terminais
 - Especifique produções usando `→` e `|` para alternativas
 - Use `ε` para representar a string vazia
