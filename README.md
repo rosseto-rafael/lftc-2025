@@ -1,4 +1,4 @@
-# JFLAP Web - Simulador de Linguagens Formais
+# Trabalho de LFTC
 
 Uma aplicação web minimalista para estudar e experimentar com expressões regulares, autômatos finitos e gramáticas regulares, inspirada no software JFLAP.
 
