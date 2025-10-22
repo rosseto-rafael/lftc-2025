@@ -206,6 +206,32 @@
                 <div id="regex-results-content"></div>
             </div>
 
+            <!-- Regex Conversion Section -->
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">🔄 Conversões</h3>
+                <p class="text-sm text-gray-600 mb-4">Converta expressões regulares para outros formalismos:</p>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <button onclick="convertRegexToAutomaton()" 
+                                class="w-full bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700 transition-colors">
+                            Converter para Autômato
+                        </button>
+                    </div>
+                    <div>
+                        <button onclick="convertRegexToGrammar()" 
+                                class="w-full bg-purple-600 text-white px-4 py-3 rounded-md hover:bg-purple-700 transition-colors">
+                            Converter para Gramática
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="regex-conversion-result" class="mt-4 hidden">
+                    <h4 class="font-semibold text-gray-700 mb-2">Resultado da Conversão:</h4>
+                    <div id="regex-conversion-content" class="p-4 bg-gray-50 rounded-md border border-gray-200"></div>
+                </div>
+            </div>
+
             <!-- Exemplos de Expressões Regulares -->
             <div class="bg-white rounded-lg shadow-md p-6 mt-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Exemplos de Expressões Regulares</h3>
@@ -335,6 +361,32 @@
                 <div id="simulation-result" class="mt-4"></div>
             </div>
 
+            <!-- Automaton Conversion Section -->
+            <div class="mt-6 bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">🔄 Conversões</h3>
+                <p class="text-sm text-gray-600 mb-4">Converta autômatos para outros formalismos:</p>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <button onclick="convertAutomatonToRegex()" 
+                                class="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors">
+                            Converter para Regex
+                        </button>
+                    </div>
+                    <div>
+                        <button onclick="convertAutomatonToGrammar()" 
+                                class="w-full bg-purple-600 text-white px-4 py-3 rounded-md hover:bg-purple-700 transition-colors">
+                            Converter para Gramática
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="automaton-conversion-result" class="mt-4 hidden">
+                    <h4 class="font-semibold text-gray-700 mb-2">Resultado da Conversão:</h4>
+                    <div id="automaton-conversion-content" class="p-4 bg-gray-50 rounded-md border border-gray-200"></div>
+                </div>
+            </div>
+
             <!-- Exemplos de Autômatos -->
             <div class="mt-6 bg-white rounded-lg shadow-md p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Exemplos de Autômatos</h3>
@@ -450,6 +502,32 @@
                     <h4 class="font-semibold text-gray-700 mb-2">Passos da Derivação:</h4>
                     <div id="derivation-steps"></div>
                     <div id="derivation-result" class="mt-4"></div>
+                </div>
+
+                <!-- Grammar Conversion Section -->
+                <div class="mt-6 pt-6 border-t">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">🔄 Conversões</h4>
+                    <p class="text-sm text-gray-600 mb-4">Converta gramáticas para outros formalismos:</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <button onclick="convertGrammarToAutomaton()" 
+                                    class="w-full bg-green-600 text-white px-4 py-3 rounded-md hover:bg-green-700 transition-colors">
+                                Converter para Autômato
+                            </button>
+                        </div>
+                        <div>
+                            <button onclick="convertGrammarToRegex()" 
+                                    class="w-full bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors">
+                                Converter para Regex
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="grammar-conversion-result" class="mt-4 hidden">
+                        <h4 class="font-semibold text-gray-700 mb-2">Resultado da Conversão:</h4>
+                        <div id="grammar-conversion-content" class="p-4 bg-gray-50 rounded-md border border-gray-200"></div>
+                    </div>
                 </div>
             </div>
 

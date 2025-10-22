@@ -101,6 +101,387 @@ function getPageDisplayName(pageId) {
 }
 
 // =================================
+// CONVERSION ALGORITHMS
+// =================================
+
+// ===== REGEX TO AUTOMATON (Thompson's Construction) =====
+class RegexToAutomaton {
+    constructor() {
+        this.stateCounter = 0;
+    }
+    
+    newState() {
+        return `q${this.stateCounter++}`;
+    }
+    
+    // Parse simple regex (supports: *, +, |, (), concatenation, basic chars)
+    parse(regex) {
+        this.stateCounter = 0;
+        const postfix = this.infixToPostfix(regex);
+        const nfa = this.postfixToNFA(postfix);
+        return this.nfaToFiniteAutomaton(nfa);
+    }
+    
+    infixToPostfix(regex) {
+        const precedence = { '|': 1, '.': 2, '*': 3, '+': 3 };
+        const output = [];
+        const operators = [];
+        
+        // Add explicit concatenation operators
+        let processed = '';
+        for (let i = 0; i < regex.length; i++) {
+            const c = regex[i];
+            processed += c;
+            
+            if (i + 1 < regex.length) {
+                const next = regex[i + 1];
+                const needsConcat = 
+                    (c !== '(' && c !== '|' && next !== ')' && next !== '|' && next !== '*' && next !== '+') ||
+                    (c === ')' && next === '(') ||
+                    (c === '*' && next === '(') ||
+                    (c === '+' && next === '(') ||
+                    (c === ')' && /[a-zA-Z0-9]/.test(next)) ||
+                    ((c === '*' || c === '+') && /[a-zA-Z0-9]/.test(next));
+                
+                if (needsConcat) {
+                    processed += '.';
+                }
+            }
+        }
+        
+        for (const c of processed) {
+            if (/[a-zA-Z0-9]/.test(c)) {
+                output.push(c);
+            } else if (c === '(') {
+                operators.push(c);
+            } else if (c === ')') {
+                while (operators.length > 0 && operators[operators.length - 1] !== '(') {
+                    output.push(operators.pop());
+                }
+                operators.pop(); // Remove '('
+            } else if (c === '*' || c === '+' || c === '|' || c === '.') {
+                while (operators.length > 0 && 
+                       operators[operators.length - 1] !== '(' &&
+                       precedence[operators[operators.length - 1]] >= precedence[c]) {
+                    output.push(operators.pop());
+                }
+                operators.push(c);
+            }
+        }
+        
+        while (operators.length > 0) {
+            output.push(operators.pop());
+        }
+        
+        return output.join('');
+    }
+    
+    postfixToNFA(postfix) {
+        const stack = [];
+        
+        for (const c of postfix) {
+            if (/[a-zA-Z0-9]/.test(c)) {
+                // Basic symbol
+                const start = this.newState();
+                const end = this.newState();
+                stack.push({
+                    start,
+                    end,
+                    transitions: [[start, c, end]]
+                });
+            } else if (c === '.') {
+                // Concatenation
+                const nfa2 = stack.pop();
+                const nfa1 = stack.pop();
+                stack.push({
+                    start: nfa1.start,
+                    end: nfa2.end,
+                    transitions: [
+                        ...nfa1.transitions,
+                        ...nfa2.transitions,
+                        [nfa1.end, 'ε', nfa2.start]
+                    ]
+                });
+            } else if (c === '|') {
+                // Union
+                const nfa2 = stack.pop();
+                const nfa1 = stack.pop();
+                const start = this.newState();
+                const end = this.newState();
+                stack.push({
+                    start,
+                    end,
+                    transitions: [
+                        ...nfa1.transitions,
+                        ...nfa2.transitions,
+                        [start, 'ε', nfa1.start],
+                        [start, 'ε', nfa2.start],
+                        [nfa1.end, 'ε', end],
+                        [nfa2.end, 'ε', end]
+                    ]
+                });
+            } else if (c === '*') {
+                // Kleene star
+                const nfa = stack.pop();
+                const start = this.newState();
+                const end = this.newState();
+                stack.push({
+                    start,
+                    end,
+                    transitions: [
+                        ...nfa.transitions,
+                        [start, 'ε', nfa.start],
+                        [start, 'ε', end],
+                        [nfa.end, 'ε', nfa.start],
+                        [nfa.end, 'ε', end]
+                    ]
+                });
+            } else if (c === '+') {
+                // One or more (a+ = aa*)
+                const nfa = stack.pop();
+                const start = this.newState();
+                const end = this.newState();
+                stack.push({
+                    start,
+                    end,
+                    transitions: [
+                        ...nfa.transitions,
+                        [start, 'ε', nfa.start],
+                        [nfa.end, 'ε', nfa.start],
+                        [nfa.end, 'ε', end]
+                    ]
+                });
+            }
+        }
+        
+        return stack[0];
+    }
+    
+    nfaToFiniteAutomaton(nfa) {
+        // Extract alphabet
+        const alphabet = new Set();
+        nfa.transitions.forEach(([_, symbol, __]) => {
+            if (symbol !== 'ε') alphabet.add(symbol);
+        });
+        
+        // Get all states
+        const states = new Set([nfa.start, nfa.end]);
+        nfa.transitions.forEach(([from, _, to]) => {
+            states.add(from);
+            states.add(to);
+        });
+        
+        return new FiniteAutomaton(
+            Array.from(states),
+            Array.from(alphabet),
+            nfa.start,
+            [nfa.end],
+            nfa.transitions
+        );
+    }
+}
+
+// ===== REGEX TO GRAMMAR =====
+function regexToGrammar(regex) {
+    // First convert regex to automaton
+    const converter = new RegexToAutomaton();
+    const automaton = converter.parse(regex);
+    
+    // Then convert automaton to grammar
+    return automatonToGrammar(automaton);
+}
+
+// ===== AUTOMATON TO GRAMMAR =====
+function automatonToGrammar(automaton) {
+    const variables = new Set();
+    const terminals = automaton.alphabet;
+    const productions = new Map();
+    
+    // Create variable for each state
+    const stateToVar = new Map();
+    Array.from(automaton.states).forEach((state, index) => {
+        const varName = index === 0 ? 'S' : String.fromCharCode(65 + index); // S, A, B, C...
+        stateToVar.set(state, varName);
+        variables.add(varName);
+    });
+    
+    const startSymbol = stateToVar.get(automaton.initialState);
+    
+    // Create productions from transitions
+    automaton.transitions.forEach((toStates, key) => {
+        const [from, symbol] = key.split(',');
+        const fromVar = stateToVar.get(from);
+        
+        if (!productions.has(fromVar)) {
+            productions.set(fromVar, []);
+        }
+        
+        toStates.forEach(to => {
+            const toVar = stateToVar.get(to);
+            
+            if (symbol === 'ε') {
+                // Epsilon transition
+                if (automaton.acceptingStates.has(to)) {
+                    productions.get(fromVar).push('ε');
+                }
+            } else {
+                // Regular transition: A → aB (right-linear)
+                const production = symbol + toVar;
+                productions.get(fromVar).push(production);
+                
+                // If target is accepting state, also add A → a
+                if (automaton.acceptingStates.has(to)) {
+                    productions.get(fromVar).push(symbol);
+                }
+            }
+        });
+    });
+    
+    // Add epsilon production if initial state is accepting
+    if (automaton.acceptingStates.has(automaton.initialState)) {
+        if (!productions.has(startSymbol)) {
+            productions.set(startSymbol, []);
+        }
+        productions.get(startSymbol).push('ε');
+    }
+    
+    return new RegularGrammar(
+        Array.from(variables),
+        Array.from(terminals),
+        startSymbol,
+        Array.from(productions.entries()).map(([left, rights]) => 
+            `${left} → ${rights.join(' | ')}`
+        )
+    );
+}
+
+// ===== GRAMMAR TO AUTOMATON =====
+function grammarToAutomaton(grammar) {
+    const states = new Set();
+    const alphabet = grammar.terminals;
+    const transitions = [];
+    
+    // Create state for each variable
+    const varToState = new Map();
+    Array.from(grammar.variables).forEach(v => {
+        const stateName = `q${v}`;
+        varToState.set(v, stateName);
+        states.add(stateName);
+    });
+    
+    // Add final state
+    const finalState = 'qF';
+    states.add(finalState);
+    
+    const initialState = varToState.get(grammar.startSymbol);
+    const acceptingStates = [finalState];
+    
+    // Parse productions and create transitions
+    grammar.productions.forEach((rights, left) => {
+        const fromState = varToState.get(left);
+        
+        rights.forEach(production => {
+            if (production === '' || production === 'ε') {
+                // A → ε: transition to final state
+                transitions.push([fromState, 'ε', finalState]);
+            } else if (production.length === 1 && alphabet.has(production)) {
+                // A → a: transition to final state
+                transitions.push([fromState, production, finalState]);
+            } else if (production.length === 2) {
+                // A → aB: regular right-linear production
+                const terminal = production[0];
+                const variable = production[1];
+                
+                if (alphabet.has(terminal) && grammar.variables.has(variable)) {
+                    const toState = varToState.get(variable);
+                    transitions.push([fromState, terminal, toState]);
+                }
+            }
+        });
+    });
+    
+    return new FiniteAutomaton(
+        Array.from(states),
+        Array.from(alphabet),
+        initialState,
+        acceptingStates,
+        transitions
+    );
+}
+
+// ===== AUTOMATON TO REGEX (State Elimination Method) =====
+function automatonToRegex(automaton) {
+    // Create GNFA (Generalized NFA) with regex labels
+    const gnfa = {
+        states: new Set(automaton.states),
+        transitions: new Map()
+    };
+    
+    // Initialize transitions with symbols
+    automaton.transitions.forEach((toStates, key) => {
+        const [from, symbol] = key.split(',');
+        toStates.forEach(to => {
+            const transKey = `${from}->${to}`;
+            if (!gnfa.transitions.has(transKey)) {
+                gnfa.transitions.set(transKey, []);
+            }
+            gnfa.transitions.get(transKey).push(symbol);
+        });
+    });
+    
+    // Simplify: merge multiple transitions between same states
+    const simplified = new Map();
+    gnfa.transitions.forEach((symbols, key) => {
+        simplified.set(key, symbols.length === 1 ? symbols[0] : `(${symbols.join('|')})`);
+    });
+    
+    // Simple conversion for basic cases
+    let regex = '';
+    const paths = [];
+    
+    // Find paths from initial to accepting states
+    automaton.acceptingStates.forEach(acceptState => {
+        const path = findSimplePath(automaton, automaton.initialState, acceptState);
+        if (path) paths.push(path);
+    });
+    
+    if (paths.length === 0) return 'ø'; // Empty language
+    if (paths.length === 1) return paths[0];
+    return `(${paths.join('|')})`;
+}
+
+function findSimplePath(automaton, start, end, visited = new Set()) {
+    if (start === end) return 'ε';
+    if (visited.has(start)) return null;
+    
+    visited.add(start);
+    const paths = [];
+    
+    automaton.transitions.forEach((toStates, key) => {
+        const [from, symbol] = key.split(',');
+        if (from === start && symbol !== 'ε') {
+            toStates.forEach(to => {
+                const subPath = findSimplePath(automaton, to, end, new Set(visited));
+                if (subPath) {
+                    paths.push(subPath === 'ε' ? symbol : `${symbol}${subPath}`);
+                }
+            });
+        }
+    });
+    
+    return paths.length > 0 ? (paths.length === 1 ? paths[0] : `(${paths.join('|')})`) : null;
+}
+
+// ===== GRAMMAR TO REGEX =====
+function grammarToRegex(grammar) {
+    // Convert grammar to automaton first
+    const automaton = grammarToAutomaton(grammar);
+    
+    // Then convert automaton to regex
+    return automatonToRegex(automaton);
+}
+
+// =================================
 // REGEX VALIDATOR
 // =================================
 
@@ -803,6 +1184,325 @@ function displayGrammarDerivation(result, targetString) {
     }
     
     derivationDiv.classList.remove('hidden');
+}
+
+// =================================
+// CONVERSION UI HANDLERS
+// =================================
+
+// Regex Conversions
+function convertRegexToAutomaton() {
+    const regexInput = document.getElementById('regex-input').value.trim();
+    
+    if (!regexInput) {
+        alert('Por favor, insira uma expressão regular primeiro');
+        return;
+    }
+    
+    try {
+        const converter = new RegexToAutomaton();
+        const automaton = converter.parse(regexInput);
+        
+        // Display result
+        const resultDiv = document.getElementById('regex-conversion-result');
+        const contentDiv = document.getElementById('regex-conversion-content');
+        
+        let html = '<div class="space-y-3">';
+        html += '<p class="font-semibold text-green-700">✓ Autômato criado com sucesso!</p>';
+        html += '<div class="grid grid-cols-2 gap-3 text-sm">';
+        html += `<div><strong>Estados:</strong> ${Array.from(automaton.states).join(', ')}</div>`;
+        html += `<div><strong>Alfabeto:</strong> ${Array.from(automaton.alphabet).join(', ')}</div>`;
+        html += `<div><strong>Estado Inicial:</strong> ${automaton.initialState}</div>`;
+        html += `<div><strong>Estados Finais:</strong> ${Array.from(automaton.acceptingStates).join(', ')}</div>`;
+        html += '</div>';
+        
+        html += '<div class="mt-3"><strong>Transições:</strong><br><code class="text-xs">';
+        const transitions = [];
+        automaton.transitions.forEach((toStates, key) => {
+            const [from, symbol] = key.split(',');
+            toStates.forEach(to => {
+                transitions.push(`${from} --${symbol}--> ${to}`);
+            });
+        });
+        html += transitions.join('<br>');
+        html += '</code></div>';
+        
+        html += '<div class="mt-4 flex gap-2">';
+        html += '<button onclick="useConvertedAutomaton()" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm">Usar este Autômato</button>';
+        html += '</div>';
+        html += '</div>';
+        
+        contentDiv.innerHTML = html;
+        resultDiv.classList.remove('hidden');
+        
+        // Store for later use
+        window.lastConvertedAutomaton = automaton;
+        
+    } catch (error) {
+        alert('Erro ao converter: ' + error.message);
+    }
+}
+
+function convertRegexToGrammar() {
+    const regexInput = document.getElementById('regex-input').value.trim();
+    
+    if (!regexInput) {
+        alert('Por favor, insira uma expressão regular primeiro');
+        return;
+    }
+    
+    try {
+        const grammar = regexToGrammar(regexInput);
+        
+        // Display result
+        const resultDiv = document.getElementById('regex-conversion-result');
+        const contentDiv = document.getElementById('regex-conversion-content');
+        
+        let html = '<div class="space-y-3">';
+        html += '<p class="font-semibold text-purple-700">✓ Gramática criada com sucesso!</p>';
+        html += '<div class="grid grid-cols-2 gap-3 text-sm">';
+        html += `<div><strong>Variáveis:</strong> ${Array.from(grammar.variables).join(', ')}</div>`;
+        html += `<div><strong>Terminais:</strong> ${Array.from(grammar.terminals).join(', ')}</div>`;
+        html += `<div><strong>Símbolo Inicial:</strong> ${grammar.startSymbol}</div>`;
+        html += '</div>';
+        
+        html += '<div class="mt-3"><strong>Produções:</strong><br><code class="text-sm">';
+        const productions = [];
+        grammar.productions.forEach((rights, left) => {
+            productions.push(`${left} → ${rights.join(' | ')}`);
+        });
+        html += productions.join('<br>');
+        html += '</code></div>';
+        
+        html += '<div class="mt-4 flex gap-2">';
+        html += '<button onclick="useConvertedGrammar()" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm">Usar esta Gramática</button>';
+        html += '</div>';
+        html += '</div>';
+        
+        contentDiv.innerHTML = html;
+        resultDiv.classList.remove('hidden');
+        
+        // Store for later use
+        window.lastConvertedGrammar = grammar;
+        
+    } catch (error) {
+        alert('Erro ao converter: ' + error.message);
+    }
+}
+
+// Automaton Conversions
+function convertAutomatonToRegex() {
+    if (!currentAutomaton) {
+        alert('Por favor, crie um autômato primeiro');
+        return;
+    }
+    
+    try {
+        const regex = automatonToRegex(currentAutomaton);
+        
+        // Display result
+        const resultDiv = document.getElementById('automaton-conversion-result');
+        const contentDiv = document.getElementById('automaton-conversion-content');
+        
+        let html = '<div class="space-y-3">';
+        html += '<p class="font-semibold text-blue-700">✓ Regex criada com sucesso!</p>';
+        html += `<div class="text-lg"><strong>Expressão Regular:</strong> <code class="bg-white px-3 py-2 rounded border">${regex}</code></div>`;
+        html += '<div class="mt-4 flex gap-2">';
+        html += '<button onclick="useConvertedRegex()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm">Usar esta Regex</button>';
+        html += '</div>';
+        html += '</div>';
+        
+        contentDiv.innerHTML = html;
+        resultDiv.classList.remove('hidden');
+        
+        // Store for later use
+        window.lastConvertedRegex = regex;
+        
+    } catch (error) {
+        alert('Erro ao converter: ' + error.message);
+    }
+}
+
+function convertAutomatonToGrammar() {
+    if (!currentAutomaton) {
+        alert('Por favor, crie um autômato primeiro');
+        return;
+    }
+    
+    try {
+        const grammar = automatonToGrammar(currentAutomaton);
+        
+        // Display result
+        const resultDiv = document.getElementById('automaton-conversion-result');
+        const contentDiv = document.getElementById('automaton-conversion-content');
+        
+        let html = '<div class="space-y-3">';
+        html += '<p class="font-semibold text-purple-700">✓ Gramática criada com sucesso!</p>';
+        html += '<div class="grid grid-cols-2 gap-3 text-sm">';
+        html += `<div><strong>Variáveis:</strong> ${Array.from(grammar.variables).join(', ')}</div>`;
+        html += `<div><strong>Terminais:</strong> ${Array.from(grammar.terminals).join(', ')}</div>`;
+        html += `<div><strong>Símbolo Inicial:</strong> ${grammar.startSymbol}</div>`;
+        html += '</div>';
+        
+        html += '<div class="mt-3"><strong>Produções:</strong><br><code class="text-sm">';
+        const productions = [];
+        grammar.productions.forEach((rights, left) => {
+            productions.push(`${left} → ${rights.join(' | ')}`);
+        });
+        html += productions.join('<br>');
+        html += '</code></div>';
+        
+        html += '<div class="mt-4 flex gap-2">';
+        html += '<button onclick="useConvertedGrammar()" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm">Usar esta Gramática</button>';
+        html += '</div>';
+        html += '</div>';
+        
+        contentDiv.innerHTML = html;
+        resultDiv.classList.remove('hidden');
+        
+        // Store for later use
+        window.lastConvertedGrammar = grammar;
+        
+    } catch (error) {
+        alert('Erro ao converter: ' + error.message);
+    }
+}
+
+// Grammar Conversions
+function convertGrammarToAutomaton() {
+    if (!currentGrammar) {
+        alert('Por favor, crie uma gramática primeiro');
+        return;
+    }
+    
+    try {
+        const automaton = grammarToAutomaton(currentGrammar);
+        
+        // Display result
+        const resultDiv = document.getElementById('grammar-conversion-result');
+        const contentDiv = document.getElementById('grammar-conversion-content');
+        
+        let html = '<div class="space-y-3">';
+        html += '<p class="font-semibold text-green-700">✓ Autômato criado com sucesso!</p>';
+        html += '<div class="grid grid-cols-2 gap-3 text-sm">';
+        html += `<div><strong>Estados:</strong> ${Array.from(automaton.states).join(', ')}</div>`;
+        html += `<div><strong>Alfabeto:</strong> ${Array.from(automaton.alphabet).join(', ')}</div>`;
+        html += `<div><strong>Estado Inicial:</strong> ${automaton.initialState}</div>`;
+        html += `<div><strong>Estados Finais:</strong> ${Array.from(automaton.acceptingStates).join(', ')}</div>`;
+        html += '</div>';
+        
+        html += '<div class="mt-3"><strong>Transições:</strong><br><code class="text-xs">';
+        const transitions = [];
+        automaton.transitions.forEach((toStates, key) => {
+            const [from, symbol] = key.split(',');
+            toStates.forEach(to => {
+                transitions.push(`${from} --${symbol}--> ${to}`);
+            });
+        });
+        html += transitions.join('<br>');
+        html += '</code></div>';
+        
+        html += '<div class="mt-4 flex gap-2">';
+        html += '<button onclick="useConvertedAutomaton()" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm">Usar este Autômato</button>';
+        html += '</div>';
+        html += '</div>';
+        
+        contentDiv.innerHTML = html;
+        resultDiv.classList.remove('hidden');
+        
+        // Store for later use
+        window.lastConvertedAutomaton = automaton;
+        
+    } catch (error) {
+        alert('Erro ao converter: ' + error.message);
+    }
+}
+
+function convertGrammarToRegex() {
+    if (!currentGrammar) {
+        alert('Por favor, crie uma gramática primeiro');
+        return;
+    }
+    
+    try {
+        const regex = grammarToRegex(currentGrammar);
+        
+        // Display result
+        const resultDiv = document.getElementById('grammar-conversion-result');
+        const contentDiv = document.getElementById('grammar-conversion-content');
+        
+        let html = '<div class="space-y-3">';
+        html += '<p class="font-semibold text-blue-700">✓ Regex criada com sucesso!</p>';
+        html += `<div class="text-lg"><strong>Expressão Regular:</strong> <code class="bg-white px-3 py-2 rounded border">${regex}</code></div>`;
+        html += '<div class="mt-4 flex gap-2">';
+        html += '<button onclick="useConvertedRegex()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm">Usar esta Regex</button>';
+        html += '</div>';
+        html += '</div>';
+        
+        contentDiv.innerHTML = html;
+        resultDiv.classList.remove('hidden');
+        
+        // Store for later use
+        window.lastConvertedRegex = regex;
+        
+    } catch (error) {
+        alert('Erro ao converter: ' + error.message);
+    }
+}
+
+// Helper functions to use converted objects
+function useConvertedAutomaton() {
+    if (window.lastConvertedAutomaton) {
+        showPage('automaton');
+        setTimeout(() => {
+            const automaton = window.lastConvertedAutomaton;
+            document.getElementById('states-input').value = Array.from(automaton.states).join(',');
+            document.getElementById('alphabet-input').value = Array.from(automaton.alphabet).join(',');
+            document.getElementById('initial-state').value = automaton.initialState;
+            document.getElementById('accepting-states').value = Array.from(automaton.acceptingStates).join(',');
+            
+            const transitions = [];
+            automaton.transitions.forEach((toStates, key) => {
+                const [from, symbol] = key.split(',');
+                toStates.forEach(to => {
+                    transitions.push(`${from},${symbol},${to}`);
+                });
+            });
+            document.getElementById('transitions-input').value = transitions.join('\n');
+            
+            createAutomaton();
+        }, 300);
+    }
+}
+
+function useConvertedGrammar() {
+    if (window.lastConvertedGrammar) {
+        showPage('grammar');
+        setTimeout(() => {
+            const grammar = window.lastConvertedGrammar;
+            document.getElementById('variables-input').value = Array.from(grammar.variables).join(',');
+            document.getElementById('terminals-input').value = Array.from(grammar.terminals).join(',');
+            document.getElementById('start-symbol').value = grammar.startSymbol;
+            
+            const productions = [];
+            grammar.productions.forEach((rights, left) => {
+                productions.push(`${left} → ${rights.join(' | ')}`);
+            });
+            document.getElementById('productions-input').value = productions.join('\n');
+            
+            createGrammar();
+        }, 300);
+    }
+}
+
+function useConvertedRegex() {
+    if (window.lastConvertedRegex) {
+        showPage('regex');
+        setTimeout(() => {
+            document.getElementById('regex-input').value = window.lastConvertedRegex;
+            document.getElementById('regex-input').focus();
+        }, 300);
+    }
 }
 
 // Initialize the application

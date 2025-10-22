@@ -18,18 +18,32 @@ Uma aplicação web minimalista para estudar e experimentar com expressões regu
 - Insira uma expressão regular usando operadores básicos: `*`, `+`, `|`, `()`
 - Teste múltiplas cadeias de entrada
 - Visualize quais cadeias são aceitas ou rejeitadas
+- **NOVO**: Converta para Autômato ou Gramática
 
 ### 🔹 Simulador de Autômatos Finitos
 - Defina estados, alfabeto, estado inicial e estados de aceitação
 - Especifique transições no formato: `estado,símbolo,próximo_estado`
 - Visualize o autômato graficamente
 - Simule a execução passo a passo com qualquer cadeia de entrada
+- **NOVO**: Converta para Regex ou Gramática
 
 ### 🔹 Simulador de Gramáticas Regulares
 - Defina variáveis (não-terminais) e terminais
 - Especifique produções usando `→` e `|` para alternativas
 - Use `ε` para representar a string vazia
 - Teste derivações passo a passo
+- **NOVO**: Converta para Autômato ou Regex
+- **Formato**: Gramáticas Regulares Unitárias à Direita (Right-Linear)
+
+### 🔄 Conversões entre Formalismos
+- **Regex → Autômato**: Construção de Thompson (NFAs)
+- **Regex → Gramática**: Via autômato intermediário
+- **Autômato → Regex**: Eliminação de estados (simplificado)
+- **Autômato → Gramática**: Mapeamento direto
+- **Gramática → Autômato**: Conversão de produções em transições
+- **Gramática → Regex**: Via autômato intermediário
+
+Todas as conversões são baseadas no **Teorema de Kleene** e preservam a linguagem regular.
 
 ## 🎯 Exemplos Pré-carregados
 
@@ -37,7 +51,13 @@ A aplicação vem com exemplos pré-carregados para facilitar o teste:
 
 - **Regex**: `a*b+` (zero ou mais 'a' seguidos de um ou mais 'b')
 - **Autômato**: Aceita cadeias que terminam com 'b' após uma sequência de 'a' e 'b'
-- **Gramática**: Gera cadeias alternando 'a' e 'b'
+- **Gramática**: Gera cadeias alternando 'a' e 'b' (Right-Linear)
+
+## 📚 Documentação Adicional
+
+- **[CONVERSOES.md](CONVERSOES.md)**: Detalhes técnicos sobre os algoritmos de conversão
+- **[EXEMPLOS_TESTE.md](EXEMPLOS_TESTE.md)**: Casos de teste práticos para validação
+- **[test_conversions.js](test_conversions.js)**: Script de teste automatizado
 
 ## 💻 Tecnologias Utilizadas
 
@@ -53,6 +73,15 @@ Esta aplicação foi desenvolvida para fins educacionais, especialmente para est
 - Linguagens Formais e Autômatos
 - Compiladores
 - Ciência da Computação
+
+### Conceitos Abordados:
+- ✅ Expressões Regulares
+- ✅ Autômatos Finitos (DFA/NFA)
+- ✅ Gramáticas Regulares (Right-Linear)
+- ✅ Teorema de Kleene (equivalência dos formalismos)
+- ✅ Construção de Thompson (Regex → NFA)
+- ✅ Eliminação de Estados (Autômato → Regex)
+- ✅ Conversões entre formalismos equivalentes
 
 ## 📱 Responsividade
 
